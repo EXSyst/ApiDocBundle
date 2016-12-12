@@ -12,14 +12,17 @@
 namespace EXSyst\Bundle\ApiDocBundle\RouteDescriber;
 
 use Doctrine\Common\Annotations\Reader;
+use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
+use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareTrait;
 use EXSyst\Component\Swagger\Parameter;
 use EXSyst\Component\Swagger\Swagger;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\Routing\Route;
 
-final class NelmioAnnotationDescriber implements RouteDescriberInterface
+final class NelmioAnnotationDescriber implements RouteDescriberInterface, ModelRegistryAwareInterface
 {
-    use RouteDescriberTrait;
+    use RouteDescriberTrait, ModelRegistryAwareTrait;
 
     private $annotationReader;
 
@@ -85,12 +88,19 @@ final class NelmioAnnotationDescriber implements RouteDescriberInterface
             }
 
             // Responses
+            $responses = $operation->getResponses();
             if (isset($annotationArray['statusCodes'])) {
-                $responses = $operation->getResponses();
                 foreach ($annotationArray['statusCodes'] as $statusCode => $description) {
                     $response = $responses->get($statusCode);
-                    $response->setDescription($description);
+                    $response->setDescription($description[0]);
                 }
+            }
+
+            // Outputs
+            foreach ($annotation->getResponseMap() as $statusCode => $output) {
+                $class = is_string($output) ? $output : $output['class'];
+                $type = new Type(Type::BUILTIN_TYPE_OBJECT, false, $class);
+                $this->modelRegistry->register($responses->get($statusCode)->getSchema())->setType($type);
             }
         }
     }

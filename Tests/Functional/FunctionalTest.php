@@ -56,12 +56,25 @@ class FunctionalTest extends WebTestCase
     {
         $operation = $this->getOperation('/api/nelmio/{foo}', 'post');
 
+        // Action
         $this->assertEquals('This action is described.', $operation->getDescription());
         $this->assertNull($operation->getDeprecated());
 
+        // Parameters
         $foo = $operation->getParameters()->get('foo', 'path');
         $this->assertTrue($foo->getRequired());
         $this->assertEquals('string', $foo->getType());
+
+        // Responses / Status codes
+        $responses = $operation->getResponses();
+        $this->assertTrue($responses->has('200'));
+        $this->assertEquals('Returned when successful', $responses->get('200')->getDescription());
+
+        $this->assertTrue($responses->has('403'));
+        $this->assertEquals('Returned when the user is not authorized to say hello', $responses->get('403')->getDescription());
+
+        // Output model
+        $this->assertEquals('#/definitions/Dummy2', $responses->get('200')->getSchema()->getRef());
     }
 
     public function testDeprecatedAction()
@@ -93,7 +106,7 @@ class FunctionalTest extends WebTestCase
         $api = $this->getSwaggerDefinition();
         $paths = $api->getPaths();
 
-        $this->assertTrue($paths->has($path));
+        $this->assertTrue($paths->has($path), sprintf('Path "%s" does not exist.', $path));
         $action = $paths->get($path);
 
         $this->assertTrue($action->hasOperation($method));

@@ -6,6 +6,11 @@
     <services>
         <service id="exsyst_api_doc.generator" class="EXSyst\Bundle\ApiDocBundle\ApiDocGenerator">
             <argument type="collection" />
+            <argument type="service" id="exsyst_api_doc.model_registry" />
+        </service>
+
+        <service id="exsyst_api_doc.model_registry" class="EXSyst\Bundle\ApiDocBundle\Model\ModelRegistry" public="false">
+            <argument type="collection" />
         </service>
 
         <!-- Extractors -->

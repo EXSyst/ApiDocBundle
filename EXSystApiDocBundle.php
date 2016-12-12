@@ -12,6 +12,7 @@
 namespace EXSyst\Bundle\ApiDocBundle;
 
 use EXSyst\Bundle\ApiDocBundle\DependencyInjection\Compiler\AddDescribersPass;
+use EXSyst\Bundle\ApiDocBundle\DependencyInjection\Compiler\AddModelDescribersPass;
 use EXSyst\Bundle\ApiDocBundle\DependencyInjection\Compiler\AddRouteDescribersPass;
 use EXSyst\Bundle\ApiDocBundle\DependencyInjection\EXSystApiDocExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -26,6 +27,7 @@ final class EXSystApiDocBundle extends Bundle
     {
         $container->addCompilerPass(new AddDescribersPass());
         $container->addCompilerPass(new AddRouteDescribersPass());
+        $container->addCompilerPass(new AddModelDescribersPass());
     }
 
     /**
