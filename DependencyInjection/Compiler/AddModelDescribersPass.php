@@ -24,7 +24,7 @@ final class AddModelDescribersPass implements CompilerPassInterface
 
     public function process(ContainerBuilder $container)
     {
-        $modelDescribers = $this->findAndSortTaggedServices('exsyst_api_doc.moded_describer', $container);
+        $modelDescribers = $this->findAndSortTaggedServices('exsyst_api_doc.model_describer', $container);
 
         $container->getDefinition('exsyst_api_doc.model_registry')->replaceArgument(0, $modelDescribers);
     }

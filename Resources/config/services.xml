@@ -13,11 +13,10 @@
             <argument type="collection" />
         </service>
 
-        <!-- Extractors -->
+        <!-- Describers -->
         <service id="exsyst_api_doc.describers.route.filtered_route_collection_builder" class="EXSyst\Bundle\ApiDocBundle\Routing\FilteredRouteCollectionBuilder" public="false">
             <argument type="collection" /> <!-- Path patterns -->
         </service>
-
 
         <service id="exsyst_api_doc.describers.route" class="EXSyst\Bundle\ApiDocBundle\Describer\RouteDescriber" public="false">
             <argument type="service" id="service_container" />
@@ -41,9 +40,24 @@
             <tag name="exsyst_api_doc.describer" priority="-1000" />
         </service>
 
-        <!-- Routing Extractors -->
+        <!-- Routing Describers -->
         <service id="exsyst_api_doc.route_describers.route_metadata" class="EXSyst\Bundle\ApiDocBundle\RouteDescriber\RouteMetadataDescriber" public="false">
             <tag name="exsyst_api_doc.route_describer" priority="-100" />
+        </service>
+
+        <!-- Model Describers -->
+        <service id="exsyst_api_doc.model_describers.object" class="EXSyst\Bundle\ApiDocBundle\ModelDescriber\ObjectModelDescriber" public="false">
+            <argument type="service" id="property_info" />
+
+            <tag name="exsyst_api_doc.model_describer" />
+        </service>
+
+        <service id="exsyst_api_doc.model_describers.collection" class="EXSyst\Bundle\ApiDocBundle\ModelDescriber\CollectionModelDescriber" public="false">
+            <tag name="exsyst_api_doc.model_describer" />
+        </service>
+
+        <service id="exsyst_api_doc.model_describers.scalar" class="EXSyst\Bundle\ApiDocBundle\ModelDescriber\ScalarModelDescriber" public="false">
+            <tag name="exsyst_api_doc.model_describer" />
         </service>
     </services>
 

@@ -12,6 +12,8 @@
 namespace EXSyst\Bundle\ApiDocBundle\Model;
 
 use EXSyst\Bundle\ApiDocBundle\ModelDescriber\ModelDescriberInterface;
+use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
+use EXSyst\Component\Swagger\Items;
 use EXSyst\Component\Swagger\Schema;
 use EXSyst\Component\Swagger\Swagger;
 use Symfony\Component\PropertyInfo\Type;
@@ -33,12 +35,14 @@ final class ModelRegistry
     }
 
     /**
-     * @param Schema    $schema
-     * @param Type|null $type    null if not known yet
-     * @param array     $options
+     * @param Schema|Items $schema
      */
-    public function register(Schema $schema)
+    public function register($schema): ModelOptions
     {
+        if (!$schema instanceof Schema && !$schema instanceof Items) {
+            throw new \LogicException(sprintf('Expected %s or %s, got %s', Schema::class, Items::class, get_class($schema)));
+        }
+
         if (!isset($this->options[$schema])) {
             $this->unregistered[] = $schema;
             $this->options[$schema] = new ModelOptions();
@@ -73,17 +77,30 @@ final class ModelRegistry
             $this->unregistered = [];
 
             foreach ($tmp as $hash => list($options, $schemas)) {
+                $baseSchema = new Schema();
+                $described = false;
+                foreach ($this->modelDescribers as $modelDescriber) {
+                    if ($modelDescriber instanceof ModelRegistryAwareInterface) {
+                        $modelDescriber->setModelRegistry($this);
+                    }
+                    if ($modelDescriber->supports($options)) {
+                        $described = true;
+                        $modelDescriber->describe($baseSchema, $options);
+
+                        break;
+                    }
+                }
+
+                if (!$described) {
+                    throw new \LogicException(sprintf('Schema of type "%s" can\'t be generated, no describer supports it.', $this->typeToString($options->getType())));
+                }
+
                 $name = $this->generateModelName($api, $options);
                 $this->hashes[$hash] = $name;
-
-                $baseSchema = $api->getDefinitions()->get($name);
+                $api->getDefinitions()->set($name, $baseSchema);
 
                 foreach ($schemas as $schema) {
                     $schema->setRef('#/definitions/'.$name);
-                }
-
-                foreach ($this->modelDescribers as $modelDescriber) {
-                    $modelDescriber->describe($baseSchema, $options);
                 }
             }
         }
@@ -98,15 +115,8 @@ final class ModelRegistry
 
     private function generateModelName(Swagger $api, ModelOptions $options): string
     {
-        $type = $options->getType();
-        if ($type->isCollection()) {
-            $base = $this->getTypeShortName($type->getCollectionValueType()).'[]';
-        } else {
-            $base = (new \ReflectionClass($type->getClassName()))->getShortName();
-        }
-
         $definitions = $api->getDefinitions();
-        $name = $base;
+        $base = $name = $this->getTypeShortName($options->getType());
         $i = 1;
         while ($definitions->has($name)) {
             ++$i;
@@ -114,5 +124,32 @@ final class ModelRegistry
         }
 
         return $name;
+    }
+
+    private function getTypeShortName(Type $type)
+    {
+        if (null !== $type->getCollectionValueType()) {
+            return $this->getTypeShortName($type->getCollectionValueType()).'[]';
+        }
+        if (Type::BUILTIN_TYPE_OBJECT === $type->getBuiltinType()) {
+            return (new \ReflectionClass($type->getClassName()))->getShortName();
+        }
+
+        return $type->getBuiltinType();
+    }
+
+    private function typeToString(Type $type): string
+    {
+        if (Type::BUILTIN_TYPE_OBJECT === $type->getBuiltinType()) {
+            return $type->getClassName();
+        } elseif (Type::BUILTIN_TYPE_ARRAY === $type->getBuiltinType()) {
+            if (null !== $type->getCollectionValueType()) {
+                return $this->typeToString($type->getCollectionValueType()).'[]';
+            } else {
+                return 'mixed[]';
+            }
+        } else {
+            return $type->getBuiltinType();
+        }
     }
 }

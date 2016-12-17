@@ -15,20 +15,25 @@ use EXSyst\Bundle\ApiDocBundle\Model\ModelOptions;
 use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
 use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareTrait;
 use EXSyst\Component\Swagger\Schema;
+use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
 
-class CollectionModelDescriber implements ModelDescriberInterface, ModelRegistryAwareInterface
+class ScalarModelDescriber implements ModelDescriberInterface
 {
-    use ModelRegistryAwareTrait;
+    private static $supportedTypes = [
+        Type::BUILTIN_TYPE_INT => 'integer',
+        Type::BUILTIN_TYPE_FLOAT => 'float',
+        Type::BUILTIN_TYPE_STRING => 'string',
+    ];
 
     public function describe(Schema $schema, ModelOptions $options)
     {
-        $schema->setType('array');
-        $this->modelRegistry->register($schema->getItems())
-            ->setType($options->getType()->getCollectionValueType());
+        $type = self::$supportedTypes[$options->getType()->getBuiltinType()];
+        $schema->setType($type);
     }
 
     public function supports(ModelOptions $options)
     {
-        return $options->getType()->isCollection() && null !== $options->getType()->getCollectionValueType();
+        return isset(self::$supportedTypes[$options->getType()->getBuiltinType()]);
     }
 }

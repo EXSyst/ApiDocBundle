@@ -12,6 +12,8 @@
 namespace EXSyst\Bundle\ApiDocBundle\Tests\Functional;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use EXSyst\Component\Swagger\Schema;
+use EXSyst\Component\Swagger\Operation;
 
 class FunctionalTest extends WebTestCase
 {
@@ -74,7 +76,7 @@ class FunctionalTest extends WebTestCase
         $this->assertEquals('Returned when the user is not authorized to say hello', $responses->get('403')->getDescription());
 
         // Output model
-        $this->assertEquals('#/definitions/Dummy2', $responses->get('200')->getSchema()->getRef());
+        $this->assertEquals('#/definitions/User', $responses->get('200')->getSchema()->getRef());
     }
 
     public function testDeprecatedAction()
@@ -94,6 +96,27 @@ class FunctionalTest extends WebTestCase
         $operation = $this->getOperation('/api/dummies/{id}', 'get');
     }
 
+    public function testUserModel()
+    {
+        $model = $this->getModel('User');
+        $this->assertEquals('object', $model->getType());
+        $properties = $model->getProperties();
+
+        $this->assertTrue($properties->has('users'));
+        $this->assertEquals('#/definitions/User[]', $properties->get('users')->getRef());
+
+        $this->assertTrue($properties->has('dummy'));
+        $this->assertEquals('#/definitions/Dummy2', $properties->get('dummy')->getRef());
+    }
+
+    public function testUsersModel()
+    {
+        $model = $this->getModel('User[]');
+        $this->assertEquals('array', $model->getType());
+
+        $this->assertEquals('#/definitions/User', $model->getItems()->getRef());
+    }
+
     private function getSwaggerDefinition()
     {
         static::createClient();
@@ -101,7 +124,15 @@ class FunctionalTest extends WebTestCase
         return static::$kernel->getContainer()->get('exsyst_api_doc.generator')->generate();
     }
 
-    private function getOperation($path, $method)
+    private function getModel($name): Schema
+    {
+        $definitions = $this->getSwaggerDefinition()->getDefinitions();
+        $this->assertTrue($definitions->has($name));
+
+        return $definitions->get($name);
+    }
+
+    private function getOperation($path, $method): Operation
     {
         $api = $this->getSwaggerDefinition();
         $paths = $api->getPaths();
