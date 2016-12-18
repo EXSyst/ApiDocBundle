@@ -11,8 +11,8 @@
 
 namespace EXSyst\Bundle\ApiDocBundle\Model;
 
-use EXSyst\Bundle\ApiDocBundle\ModelDescriber\ModelDescriberInterface;
 use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
+use EXSyst\Bundle\ApiDocBundle\ModelDescriber\ModelDescriberInterface;
 use EXSyst\Component\Swagger\Items;
 use EXSyst\Component\Swagger\Schema;
 use EXSyst\Component\Swagger\Swagger;

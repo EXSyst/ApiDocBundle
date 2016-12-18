@@ -11,9 +11,9 @@
 
 namespace EXSyst\Bundle\ApiDocBundle\ModelDescriber;
 
-use EXSyst\Bundle\ApiDocBundle\Model\ModelOptions;
 use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
 use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareTrait;
+use EXSyst\Bundle\ApiDocBundle\Model\ModelOptions;
 use EXSyst\Component\Swagger\Schema;
 
 class CollectionModelDescriber implements ModelDescriberInterface, ModelRegistryAwareInterface

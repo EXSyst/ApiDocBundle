@@ -12,11 +12,8 @@
 namespace EXSyst\Bundle\ApiDocBundle\ModelDescriber;
 
 use EXSyst\Bundle\ApiDocBundle\Model\ModelOptions;
-use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareInterface;
-use EXSyst\Bundle\ApiDocBundle\Describer\ModelRegistryAwareTrait;
 use EXSyst\Component\Swagger\Schema;
 use Symfony\Component\PropertyInfo\Type;
-use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
 
 class ScalarModelDescriber implements ModelDescriberInterface
 {

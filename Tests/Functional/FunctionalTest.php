@@ -11,9 +11,9 @@
 
 namespace EXSyst\Bundle\ApiDocBundle\Tests\Functional;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use EXSyst\Component\Swagger\Schema;
 use EXSyst\Component\Swagger\Operation;
+use EXSyst\Component\Swagger\Schema;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class FunctionalTest extends WebTestCase
 {

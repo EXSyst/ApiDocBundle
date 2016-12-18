@@ -17,5 +17,6 @@ use EXSyst\Component\Swagger\Schema;
 interface ModelDescriberInterface
 {
     public function describe(Schema $schema, ModelOptions $options);
+
     public function supports(ModelOptions $options);
 }

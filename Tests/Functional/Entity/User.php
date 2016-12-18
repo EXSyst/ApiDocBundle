@@ -11,10 +11,6 @@
 
 namespace EXSyst\Bundle\ApiDocBundle\Tests\Functional\Entity;
 
-use ApiPlatform\Core\Annotation\ApiProperty;
-use ApiPlatform\Core\Annotation\ApiResource;
-use Symfony\Component\Validator\Constraints as Assert;
-
 /**
  * @author Guilhem N. <egetick@gmail.com>
  */
