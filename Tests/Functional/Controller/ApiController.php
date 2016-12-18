@@ -11,6 +11,8 @@
 
 namespace EXSyst\Bundle\ApiDocBundle\Tests\Functional\Controller;
 
+use EXSyst\Bundle\ApiDocBundle\Tests\Functional\Entity\Dummy;
+use EXSyst\Bundle\ApiDocBundle\Tests\Functional\Entity\User;
 use FOS\RestBundle\Controller\Annotations\QueryParam;
 use FOS\RestBundle\Controller\Annotations\RequestParam;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -40,7 +42,13 @@ class ApiController
     /**
      * @Route("/nelmio/{foo}", methods={"POST"})
      * @ApiDoc(
-     *   description="This action is described."
+     *   description="This action is described.",
+     *   input={"class"=Dummy::class},
+     *   output=User::class,
+     *   statusCodes={
+     *      200="Returned when successful",
+     *      403="Returned when the user is not authorized to say hello"
+     *   }
      * )
      */
     public function nelmioAction()
