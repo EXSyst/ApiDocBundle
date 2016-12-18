@@ -96,11 +96,19 @@ final class NelmioAnnotationDescriber implements RouteDescriberInterface, ModelR
                 }
             }
 
+            // Input
+            $input = $annotation->getInput();
+            if (null !== $input) {
+                list($type) = $this->normalizeModel($input);
+                $this->modelRegistry->register($operation->getParameters()->get('input', 'body')->getSchema())
+                    ->setType($type);
+            }
+
             // Outputs
             foreach ($annotation->getResponseMap() as $statusCode => $output) {
-                $class = is_string($output) ? $output : $output['class'];
-                $type = new Type(Type::BUILTIN_TYPE_OBJECT, false, $class);
-                $this->modelRegistry->register($responses->get($statusCode)->getSchema())->setType($type);
+                list($type) = $this->normalizeModel($output);
+                $this->modelRegistry->register($responses->get($statusCode)->getSchema())
+                    ->setType($type);
             }
         }
     }
@@ -137,5 +145,30 @@ final class NelmioAnnotationDescriber implements RouteDescriberInterface, ModelR
         if (isset($configuration['default'])) {
             $parameter->setDefault($configuration['default']);
         }
+    }
+
+    /**
+     * @return array (Type $type, array|null $groups)
+     */
+    private function normalizeModel($parameter)
+    {
+        // normalize strings
+        if (is_string($parameter)) {
+            $parameter = array('class' => $parameter);
+        }
+        if (0 === strpos($parameter['class'], 'array<')) {
+            $parameter['class'] = substr($parameter['class'], 6, -1);
+            $parameter['collection'] = true;
+        }
+        if (isset($input['groups']) && is_string($input['groups'])) {
+            $input['groups'] = array_map('trim', explode(',', $input['groups']));
+        }
+
+        $type = new Type(Type::BUILTIN_TYPE_OBJECT, false, $parameter['class']);
+        if ($parameter['collection'] ?? false) {
+            $type = new Type(Type::BUILTIN_TYPE_ARRAY, false, null, true, null, $type);
+        }
+
+        return [$type, $input['groups'] ?? null];
     }
 }

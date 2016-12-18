@@ -63,9 +63,14 @@ class FunctionalTest extends WebTestCase
         $this->assertNull($operation->getDeprecated());
 
         // Parameters
-        $foo = $operation->getParameters()->get('foo', 'path');
+        $parameters = $operation->getParameters();
+        $foo = $parameters->get('foo', 'path');
         $this->assertTrue($foo->getRequired());
         $this->assertEquals('string', $foo->getType());
+
+        // Input model
+        $this->assertTrue($parameters->has('input', 'body'));
+        $this->assertEquals('#/definitions/Dummy2', $parameters->get('input', 'body')->getSchema()->getRef());
 
         // Responses / Status codes
         $responses = $operation->getResponses();
