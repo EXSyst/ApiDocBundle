@@ -14,7 +14,8 @@ namespace Nelmio\ApiDocBundle\SwaggerPhp;
 use EXSyst\Component\Swagger\Swagger;
 use Nelmio\ApiDocBundle\Util\ControllerReflector;
 use Swagger\Analysis;
-use Swagger\Annotations\Operation;
+use Swagger\Annotations as SWG;
+use Swagger\Context;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -37,27 +38,70 @@ final class PathResolver
 
     public function __invoke(Analysis $analysis)
     {
-        $operations = $analysis->getAnnotationsOfType(Operation::class);
+        $this->createImplicitOperations($analysis);
+        $this->completeOperations($analysis);
+    }
+
+    private function createImplicitOperations(Analysis $analysis)
+    {
+        $annotations = array_merge($analysis->getAnnotationsOfType(SWG\Response::class), $analysis->getAnnotationsOfType(SWG\Parameter::class), $analysis->getAnnotationsOfType(SWG\ExternalDocumentation::class));
+        $map = [];
+        foreach ($annotations as $annotation) {
+            $context = $annotation->_context;
+            if ($context->not('method')) {
+                continue;
+            }
+
+            $class = $this->getClass($context);
+            $method = $context->method;
+
+            $id = $class.'|'.$method;
+            if (!isset($map[$id])) {
+                $map[$id] = [];
+            }
+
+            $map[$id][] = $annotation;
+        }
+
+        $operationAnnotations = [
+            'get' => SWG\Get::class,
+            'post' => SWG\Post::class,
+            'put' => SWG\Put::class,
+            'patch' => SWG\Patch::class,
+            'delete' => SWG\Delete::class,
+            'options' => SWG\Options::class,
+            'head' => SWG\Head::class,
+        ];
+        foreach ($map as $id => $annotations) {
+            $context = $annotations[0]->_context;
+            $httpMethods = $this->getHttpMethods($context);
+            foreach ($httpMethods as $httpMethod => $paths) {
+                $annotationClass = $operationAnnotations[$httpMethod];
+                foreach ($paths as $path => $v) {
+                    $operation = new $annotationClass(['path' => $path, 'value' => $annotations], $context);
+                    $analysis->addAnnotation($operation, $context);
+                }
+            }
+
+            foreach ($annotations as $annotation) {
+                $analysis->annotations->detach($annotation);
+            }
+        }
+    }
+
+    private function completeOperations(Analysis $analysis)
+    {
+        $operations = $analysis->getAnnotationsOfType(SWG\Operation::class);
         foreach ($operations as $operation) {
             if (null !== $operation->path || $operation->_context->not('method')) {
                 continue;
             }
 
-            if (null === $this->controllerMap) {
-                $this->buildMap();
-            }
-
-            $context = $operation->_context;
-            $class = ltrim($context->namespace.'\\'.$context->class, '\\');
-            $method = $context->method;
-            $httpMethod = strtoupper($operation->method);
-
-            // Checks if a route corresponds to this method
-            if (!isset($this->controllerMap[$class][$method][$httpMethod])) {
+            $paths = $this->getPaths($operation->_context, $operation->method);
+            if (0 === count($paths)) {
                 continue;
             }
 
-            $paths = array_keys($this->controllerMap[$class][$method][$httpMethod]);
             // Define the path of the first annotation
             $operation->path = array_pop($paths);
 
@@ -69,6 +113,38 @@ final class PathResolver
                 $analysis->addAnnotation($alias, $alias->_context);
             }
         }
+    }
+
+    private function getPaths(Context $context, string $httpMethod): array
+    {
+        $httpMethods = $this->getHttpMethods($context);
+        if (!isset($httpMethods[$httpMethod])) {
+            return [];
+        }
+
+        return array_keys($httpMethods[$httpMethod]);
+    }
+
+    private function getHttpMethods(Context $context)
+    {
+        if (null === $this->controllerMap) {
+            $this->buildMap();
+        }
+
+        $class = $this->getClass($context);
+        $method = $context->method;
+
+        // Checks if a route corresponds to this method
+        if (!isset($this->controllerMap[$class][$method])) {
+            return [];
+        }
+
+        return $this->controllerMap[$class][$method];
+    }
+
+    private function getClass(Context $context)
+    {
+        return ltrim($context->namespace.'\\'.$context->class, '\\');
     }
 
     private function buildMap()
@@ -94,6 +170,7 @@ final class PathResolver
 
                 $httpMethods = $route->getMethods() ?: Swagger::$METHODS;
                 foreach ($httpMethods as $httpMethod) {
+                    $httpMethod = strtolower($httpMethod);
                     if (!isset($this->controllerMap[$class][$method][$httpMethod])) {
                         $this->controllerMap[$class][$method][$httpMethod] = [];
                     }

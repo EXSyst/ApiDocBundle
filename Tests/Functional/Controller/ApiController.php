@@ -26,10 +26,23 @@ class ApiController
      * @Route("/swagger", methods={"GET"})
      * @Route("/swagger2", methods={"GET"})
      * @SWG\Get(
-     *    @SWG\Response(response="201", description="An example resource")
+     *     @SWG\Response(response="201", description="An example resource")
      * )
      */
     public function swaggerAction()
+    {
+    }
+
+    /**
+     * @Route("/swagger/implicit", methods={"GET", "POST"})
+     * @SWG\Response(response="201", description="Operation automatically detected")
+     * @SWG\Parameter(
+     *     name="foo",
+     *     in="query",
+     *     description="This is a parameter"
+     * )
+     */
+    public function implicitSwaggerAction()
     {
     }
 

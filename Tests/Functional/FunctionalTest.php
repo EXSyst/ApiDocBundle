@@ -23,7 +23,7 @@ class FunctionalTest extends WebTestCase
     }
 
     /**
-     * Tests that the paths is automatically resolved in Swagger annotations.
+     * Tests that the paths are automatically resolved in Swagger annotations.
      *
      * @dataProvider swaggerActionPathsProvider
      */
@@ -33,13 +33,33 @@ class FunctionalTest extends WebTestCase
 
         $responses = $operation->getResponses();
         $this->assertTrue($responses->has('201'));
-
         $this->assertEquals('An example resource', $responses->get('201')->getDescription());
     }
 
     public function swaggerActionPathsProvider()
     {
         return [['/api/swagger'], ['/api/swagger2']];
+    }
+
+    /**
+     * @dataProvider implicitSwaggerActionMethodsProvider
+     */
+    public function testImplicitSwaggerAction($method)
+    {
+        $operation = $this->getOperation('/api/swagger/implicit', $method);
+
+        $responses = $operation->getResponses();
+        $this->assertTrue($responses->has('201'));
+        $this->assertEquals('Operation automatically detected', $responses->get('201')->getDescription());
+
+        $parameters = $operation->getParameters();
+        $this->assertTrue($parameters->has('foo', 'query'));
+        $this->assertEquals('This is a parameter', $parameters->get('foo', 'query')->getDescription());
+    }
+
+    public function implicitSwaggerActionMethodsProvider()
+    {
+        return [['get'], ['post']];
     }
 
     public function testUserAction()
