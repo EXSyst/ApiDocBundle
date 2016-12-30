@@ -22,6 +22,26 @@ class FunctionalTest extends WebTestCase
         $this->assertFalse($paths->has('/api/admin'));
     }
 
+    /**
+     * Tests that the paths is automatically resolved in Swagger annotations.
+     *
+     * @dataProvider swaggerActionPathsProvider
+     */
+    public function testSwaggerAction($path)
+    {
+        $operation = $this->getOperation($path, 'get');
+
+        $responses = $operation->getResponses();
+        $this->assertTrue($responses->has('201'));
+
+        $this->assertEquals('An example resource', $responses->get('201')->getDescription());
+    }
+
+    public function swaggerActionPathsProvider()
+    {
+        return [['/api/swagger'], ['/api/swagger2']];
+    }
+
     public function testUserAction()
     {
         $operation = $this->getOperation('/api/test/{user}', 'get');
@@ -93,10 +113,10 @@ class FunctionalTest extends WebTestCase
         $api = $this->getSwaggerDefinition();
         $paths = $api->getPaths();
 
-        $this->assertTrue($paths->has($path));
+        $this->assertTrue($paths->has($path), sprintf('Path "%s" does not exist', $path));
         $action = $paths->get($path);
 
-        $this->assertTrue($action->hasOperation($method));
+        $this->assertTrue($action->hasOperation($method), sprintf('Operation "%s" for path "%s" does not exist', $path, $method));
 
         return $action->getOperation($method);
     }
