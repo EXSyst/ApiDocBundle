@@ -82,10 +82,6 @@ final class PathResolver
                     $analysis->addAnnotation($operation, $context);
                 }
             }
-
-            foreach ($annotations as $annotation) {
-                $analysis->annotations->detach($annotation);
-            }
         }
     }
 

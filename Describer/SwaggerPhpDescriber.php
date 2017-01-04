@@ -11,37 +11,30 @@
 
 namespace Nelmio\ApiDocBundle\Describer;
 
+use Nelmio\ApiDocBundle\SwaggerPhp\AddDefaults;
+use Nelmio\ApiDocBundle\SwaggerPhp\ModelRegister;
 use Nelmio\ApiDocBundle\SwaggerPhp\PathResolver;
 use Swagger\Analysis;
+use Swagger\Analyser;
 
-final class SwaggerPhpDescriber extends ExternalDocDescriber
+final class SwaggerPhpDescriber extends ExternalDocDescriber implements ModelRegistryAwareInterface
 {
+    use ModelRegistryAwareTrait;
+
     private $pathResolver;
 
     public function __construct(string $projectPath, bool $overwrite = false)
     {
+        $nelmioNamespace = 'Nelmio\\ApiDocBundle\\';
+        if (!in_array($nelmioNamespace, Analyser::$whitelist)) {
+            Analyser::$whitelist[] = $nelmioNamespace;
+        }
+
         parent::__construct(function () use ($projectPath) {
-            // Ignore notices as the documentation can be completed by other describers
-            $prevHandler = set_error_handler(function ($type, $message, $file, $line, $context) use (&$prevHandler) {
-                if (E_USER_NOTICE === $type || E_USER_WARNING === $type) {
-                    return;
-                }
+            $options = ['processors' => $this->getProcessors()];
+            $annotation = \Swagger\scan($projectPath, $options);
 
-                return null !== $prevHandler && call_user_func($prevHandler, $type, $message, $file, $line, $context);
-            });
-
-            try {
-                $options = [];
-                if (null !== $this->pathResolver) {
-                    $options['processors'] = array_merge([$this->pathResolver], Analysis::processors());
-                }
-
-                $annotation = \Swagger\scan($projectPath, $options);
-
-                return json_decode(json_encode($annotation));
-            } finally {
-                restore_error_handler();
-            }
+            return json_decode(json_encode($annotation));
         }, $overwrite);
     }
 
@@ -51,5 +44,18 @@ final class SwaggerPhpDescriber extends ExternalDocDescriber
     public function setPathResolver(PathResolver $pathResolver)
     {
         $this->pathResolver = $pathResolver;
+    }
+
+    private function getProcessors(): array
+    {
+        $processors = [
+            new AddDefaults(),
+            new ModelRegister($this->modelRegistry)
+        ];
+        if (null !== $this->pathResolver) {
+            $processors[] = $this->pathResolver;
+        }
+
+        return array_merge($processors, Analysis::processors());
     }
 }

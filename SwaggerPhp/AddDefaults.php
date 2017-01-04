@@ -36,6 +36,6 @@ final class AddDefaults
             return;
         }
 
-        $analysis->addAnnotation(new Info(['title' => '', 'version' => '0.0.0']), new Context(['generated' => true]));
+        $analysis->addAnnotation(new Info(['title' => '', 'version' => '0.0.0', '_context' => new Context(['generated' => true])]),  null);
     }
 }

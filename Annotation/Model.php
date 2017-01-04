@@ -21,6 +21,10 @@ use Swagger\Annotations\AbstractAnnotation;
 final class Model extends AbstractAnnotation
 {
     public static $_required = ['type'];
+    public static $_parents = [
+        'Swagger\Annotations\Parameter',
+        'Swagger\Annotations\Response',
+    ];
 
     public $type;
 }

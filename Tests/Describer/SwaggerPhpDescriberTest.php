@@ -12,6 +12,8 @@
 namespace Nelmio\ApiDocBundle\Tests\Describer;
 
 use Nelmio\ApiDocBundle\Describer\SwaggerPhpDescriber;
+use Nelmio\ApiDocBundle\Model\ModelRegistry;
+use EXSyst\Component\Swagger\Swagger;
 
 class SwaggerPhpDescriberTest extends AbstractDescriberTest
 {
@@ -27,5 +29,6 @@ class SwaggerPhpDescriberTest extends AbstractDescriberTest
     protected function setUp()
     {
         $this->describer = new SwaggerPhpDescriber(__DIR__.'/../Fixtures');
+        $this->describer->setModelRegistry(new ModelRegistry([], new Swagger()));
     }
 }

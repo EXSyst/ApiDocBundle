@@ -52,7 +52,9 @@ class FunctionalTest extends WebTestCase
 
         $responses = $operation->getResponses();
         $this->assertTrue($responses->has('201'));
-        $this->assertEquals('Operation automatically detected', $responses->get('201')->getDescription());
+        $response = $responses->get('201');
+        $this->assertEquals('Operation automatically detected', $response->getDescription());
+        $this->assertEquals('#/definitions/User', $response->getSchema()->getRef());
 
         $parameters = $operation->getParameters();
         $this->assertTrue($parameters->has('foo', 'query'));
