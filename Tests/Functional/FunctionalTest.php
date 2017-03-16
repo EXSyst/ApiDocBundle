@@ -29,6 +29,13 @@ class FunctionalTest extends WebTestCase
         $this->assertFalse($paths->has('/api/admin'));
     }
 
+    public function testFilteredAction()
+    {
+        $paths = $this->getSwaggerDefinition()->getPaths();
+
+        $this->assertFalse($paths->has('/filtered'));
+    }
+
     /**
      * Tests that the paths are automatically resolved in Swagger annotations.
      *
@@ -152,7 +159,7 @@ class FunctionalTest extends WebTestCase
     private function getModel($name): Schema
     {
         $definitions = $this->getSwaggerDefinition()->getDefinitions();
-        $this->assertTrue($definitions->has($name));
+        $this->assertTrue($definitions->has($name), sprintf('Model %s does not exist', $name));
 
         return $definitions->get($name);
     }
